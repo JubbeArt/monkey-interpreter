@@ -6,23 +6,34 @@ import (
 	"os"
 
 	"../lexer"
-	"../tokens"
+	"../parser"
 )
 
 const PROMPT = ">>> "
 
 func Start() {
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print(PROMPT)
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		lex := lexer.New(line)
+	for {
+		fmt.Print(PROMPT)
 
-		for token := lex.NextToken(); token.Type != tokens.EOF; token = lex.NextToken() {
-			fmt.Println(token)
+		if !scanner.Scan() {
+			break
 		}
 
-		fmt.Print(PROMPT)
+		line := scanner.Text()
+		lex := lexer.New(line)
+		pars := parser.New(lex)
+
+		program := pars.ParseProgram()
+
+		if pars.HasErrors() {
+			for _, err := range pars.Errors() {
+				fmt.Println("Error: " + err)
+			}
+			continue
+		}
+
+		fmt.Println(program.String())
 	}
 }

@@ -21,12 +21,13 @@ const (
 var precedences = map[tokens.TokenType]int{
 	tokens.EQUALITY: EQUALS,
 	//tokens.NOT_EQ: EQUALS,
-	tokens.LESS:     LESSGREATER,
-	tokens.GREATER:  LESSGREATER,
-	tokens.PLUS:     SUM,
-	tokens.MINUS:    SUM,
-	tokens.MULTIPLY: PRODUCT,
-	tokens.DIVIDE:   PRODUCT,
+	tokens.LESS:       LESSGREATER,
+	tokens.GREATER:    LESSGREATER,
+	tokens.PLUS:       SUM,
+	tokens.MINUS:      SUM,
+	tokens.MULTIPLY:   PRODUCT,
+	tokens.DIVIDE:     PRODUCT,
+	tokens.LEFT_PAREN: CALL,
 }
 
 type prefixParseFunc func() ast.Expression
@@ -41,6 +42,7 @@ func (pars *Parser) installParseFuncs() {
 	pars.prefixParseFuncs[tokens.MINUS] = pars.parsePrefixExpression
 	pars.prefixParseFuncs[tokens.LEFT_PAREN] = pars.parseGroupedExpression
 	pars.prefixParseFuncs[tokens.IF] = pars.parseIfExpression
+	pars.prefixParseFuncs[tokens.FUNCTION] = pars.parseFunctionExpression
 
 	pars.infixParseFuncs[tokens.PLUS] = pars.parseInfixExpression
 	pars.infixParseFuncs[tokens.MINUS] = pars.parseInfixExpression
@@ -49,6 +51,7 @@ func (pars *Parser) installParseFuncs() {
 	pars.infixParseFuncs[tokens.EQUALITY] = pars.parseInfixExpression
 	pars.infixParseFuncs[tokens.GREATER] = pars.parseInfixExpression
 	pars.infixParseFuncs[tokens.LESS] = pars.parseInfixExpression
+	pars.infixParseFuncs[tokens.LEFT_PAREN] = pars.parseCallExpression
 }
 
 func (pars *Parser) parseExpressionStatement() *ast.ExpressionStatement {
@@ -109,7 +112,7 @@ func (pars *Parser) parseBoolean() ast.Expression {
 func (pars *Parser) parseIfExpression() ast.Expression {
 	expression := &ast.IfExpression{}
 
-	if !pars.nextTokenExpect(tokens.LEFT_PAREN) {
+	if !pars.nextTokenIf(tokens.LEFT_PAREN) {
 		pars.addError("expected \"(\" after if statement")
 		return nil
 	}
@@ -117,20 +120,20 @@ func (pars *Parser) parseIfExpression() ast.Expression {
 	pars.nextToken()
 	expression.Condition = pars.parseExpression(LOWEST)
 
-	if !pars.nextTokenExpect(tokens.RIGHT_PAREN) {
+	if !pars.nextTokenIf(tokens.RIGHT_PAREN) {
 		pars.addError("expected \")\" after if condition")
 		return nil
 	}
 
-	if !pars.nextTokenExpect(tokens.LEFT_BRACE) {
+	if !pars.nextTokenIf(tokens.LEFT_BRACE) {
 		pars.addError("expected \"{\" after if condition")
 		return nil
 	}
 
 	expression.Consequence = pars.parseBlockStatements()
 
-	if pars.nextTokenExpect(tokens.ELSE) {
-		if !pars.nextTokenExpect(tokens.LEFT_BRACE) {
+	if pars.nextTokenIf(tokens.ELSE) {
+		if !pars.nextTokenIf(tokens.LEFT_BRACE) {
 			pars.addError("expected \"{\" after else")
 			return nil
 		}
@@ -181,11 +184,88 @@ func (pars *Parser) parseInfixExpression(leftSide ast.Expression) ast.Expression
 	return expression
 }
 
+func (pars *Parser) parseFunctionExpression() ast.Expression {
+	expression := &ast.FunctionExpression{}
+
+	if !pars.nextTokenIf(tokens.LEFT_PAREN) {
+		pars.addError("expected \"(\" after function parameters")
+		return nil
+	}
+
+	expression.Parameters = pars.parseFunctionParameters()
+
+	if !pars.nextTokenIf(tokens.LEFT_BRACE) {
+		pars.addError("expected \"{\" after function parameters")
+		return nil
+	}
+
+	expression.Body = pars.parseBlockStatements()
+
+	return expression
+}
+
+func (pars *Parser) parseFunctionParameters() []string {
+	parameters := []string{}
+
+	if pars.peekToken.Type == tokens.RIGHT_PAREN {
+		pars.nextToken()
+		return parameters
+	}
+
+	pars.nextToken()
+
+	parameters = append(parameters, pars.currentToken.Value)
+
+	for pars.peekToken.Type == tokens.COMMA {
+		pars.nextToken() // ,
+		pars.nextToken() // parameter
+		parameters = append(parameters, pars.currentToken.Value)
+	}
+
+	if !pars.nextTokenIf(tokens.RIGHT_PAREN) {
+		pars.addError("expected \")\" after function parameters")
+		return nil
+	}
+
+	return parameters
+}
+
+func (pars *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	expression := &ast.CallExpression{Function: function}
+	expression.Arguments = pars.parseCallArguments()
+	return expression
+}
+
+func (pars *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	if pars.peekToken.Type == tokens.RIGHT_PAREN {
+		pars.nextToken()
+		return args
+	}
+
+	pars.nextToken()
+	args = append(args, pars.parseExpression(LOWEST))
+
+	for pars.peekToken.Type == tokens.COMMA {
+		pars.nextToken()
+		pars.nextToken()
+		args = append(args, pars.parseExpression(LOWEST))
+	}
+
+	if !pars.nextTokenIf(tokens.RIGHT_PAREN) {
+		pars.addError("expected \")\" at the end of function call")
+		return nil
+	}
+
+	return args
+}
+
 func (pars *Parser) parseGroupedExpression() ast.Expression {
 	pars.nextToken() // (
 	expression := pars.parseExpression(LOWEST)
 
-	if !pars.nextTokenExpect(tokens.RIGHT_PAREN) {
+	if !pars.nextTokenIf(tokens.RIGHT_PAREN) {
 		return nil
 	}
 

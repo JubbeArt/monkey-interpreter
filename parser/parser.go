@@ -66,7 +66,7 @@ func (pars *Parser) parseStatement() ast.Statement {
 }
 
 func (pars *Parser) parseLetStatement() *ast.LetStatement {
-	if !pars.nextTokenExpect(tokens.IDENTIFIER) {
+	if !pars.nextTokenIf(tokens.IDENTIFIER) {
 		pars.addError("expected identifier after \"let\"")
 		return nil
 	}
@@ -75,12 +75,16 @@ func (pars *Parser) parseLetStatement() *ast.LetStatement {
 		Variable: pars.currentToken.Value,
 	}
 
-	if !pars.nextTokenExpect(tokens.ASSIGN) {
+	if !pars.nextTokenIf(tokens.ASSIGN) {
 		pars.addError("expected an assignment operator (:) after \"let %v\"", statement.Variable)
 		return nil
 	}
 
-	for pars.currentToken.Type != tokens.SEMICOLON {
+	pars.nextToken()
+
+	statement.Value = pars.parseExpression(LOWEST)
+
+	if pars.peekToken.Type == tokens.SEMICOLON {
 		pars.nextToken()
 	}
 
@@ -90,14 +94,18 @@ func (pars *Parser) parseLetStatement() *ast.LetStatement {
 func (pars *Parser) parseReturnStatement() *ast.ReturnStatement {
 	statement := &ast.ReturnStatement{}
 
-	for pars.currentToken.Type != tokens.SEMICOLON {
+	pars.nextToken()
+
+	statement.Value = pars.parseExpression(LOWEST)
+
+	if pars.peekToken.Type == tokens.SEMICOLON {
 		pars.nextToken()
 	}
 
 	return statement
 }
 
-func (pars *Parser) nextTokenExpect(token tokens.TokenType) bool {
+func (pars *Parser) nextTokenIf(token tokens.TokenType) bool {
 	if pars.peekToken.Type != token {
 		return false
 	}

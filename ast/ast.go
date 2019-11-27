@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"../tokens"
 )
@@ -137,6 +138,42 @@ func (e IfExpression) String() string {
 	} else {
 		return fmt.Sprintf("if (%v) {\n %v \n} else {\n %v \n}", e.Condition.String(), e.Consequence.String(), e.Alternative.String())
 	}
+}
+
+// -------------------------------------------
+// ---------- FUNCTION EXPRESSION ------------
+// -------------------------------------------
+type FunctionExpression struct {
+	Parameters []string
+	Body       *BlockStatement
+}
+
+func (e FunctionExpression) expressionNode() {}
+func (e FunctionExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("fn (")
+	out.WriteString(strings.Join(e.Parameters, ", "))
+	out.WriteString(") {\n  " + e.Body.String() + "\n}")
+	return out.String()
+}
+
+// -------------------------------------------
+// ------------ CALL EXPRESSION --------------
+// -------------------------------------------
+type CallExpression struct {
+	Function  Expression
+	Arguments []Expression
+}
+
+func (e CallExpression) expressionNode() {}
+func (e CallExpression) String() string {
+	args := []string{}
+
+	for _, arg := range e.Arguments {
+		args = append(args, arg.String())
+	}
+
+	return fmt.Sprintf("%v(%v)", e.Function.String(), strings.Join(args, ", "))
 }
 
 // -------------------------------------------
