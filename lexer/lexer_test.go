@@ -8,64 +8,78 @@ import (
 
 func TestNextToken(t *testing.T) {
 	input := `
-		let five : 5;
-		let ten : 10;
-		let add : fn(x, y) {
-			x + y;
-			};
-		let result : add(five, ten);
-	`
-
-	tests := []tokens.Token{
-		{tokens.LET, ""},
-		{tokens.IDENTIFIER, "five"},
+		hello_world 123 123.4 "" "yes" 
+		= 
+		+-*/
+		+=-=*=/=
+		==!=<<=>>=
+		,
+		([{}])
+		not and or for in do break continue func if then elseif
+		else return end true false nil
+		`
+	tests := []struct {
+		expectedType    tokens.TokenType
+		expectedLiteral string
+	}{
+		{tokens.IDENT, "hello_world"},
+		{tokens.NUMBER, "123"},
+		{tokens.NUMBER, "123.4"},
+		{tokens.STRING, ""},
+		{tokens.STRING, "yes"},
 		{tokens.ASSIGN, ""},
-		{tokens.INT, "5"},
-		{tokens.SEMICOLON, ""},
-		{tokens.LET, ""},
-		{tokens.IDENTIFIER, "ten"},
-		{tokens.ASSIGN, ""},
-		{tokens.INT, "10"},
-		{tokens.SEMICOLON, ""},
-		{tokens.LET, ""},
-		{tokens.IDENTIFIER, "add"},
-		{tokens.ASSIGN, ""},
-		{tokens.FUNCTION, ""},
-		{tokens.LEFT_PAREN, ""},
-		{tokens.IDENTIFIER, "x"},
+		{tokens.ADD, ""},
+		{tokens.SUB, ""},
+		{tokens.MUL, ""},
+		{tokens.DIV, ""},
+		{tokens.ADD_ASSIGN, ""},
+		{tokens.SUB_ASSIGN, ""},
+		{tokens.MUL_ASSIGN, ""},
+		{tokens.DIV_ASSIGN, ""},
+		{tokens.EQ, ""},
+		{tokens.NOT_EQ, ""},
+		{tokens.LESS, ""},
+		{tokens.LESS_EQ, ""},
+		{tokens.GREATER, ""},
+		{tokens.GREATER_EQ, ""},
 		{tokens.COMMA, ""},
-		{tokens.IDENTIFIER, "y"},
-		{tokens.RIGHT_PAREN, ""},
-		{tokens.LEFT_BRACE, ""},
-		{tokens.IDENTIFIER, "x"},
-		{tokens.PLUS, ""},
-		{tokens.IDENTIFIER, "y"},
-		{tokens.SEMICOLON, ""},
-		{tokens.RIGHT_BRACE, ""},
-		{tokens.SEMICOLON, ""},
-		{tokens.LET, ""},
-		{tokens.IDENTIFIER, "result"},
-		{tokens.ASSIGN, ""},
-		{tokens.IDENTIFIER, "add"},
-		{tokens.LEFT_PAREN, ""},
-		{tokens.IDENTIFIER, "five"},
-		{tokens.COMMA, ""},
-		{tokens.IDENTIFIER, "ten"},
-		{tokens.RIGHT_PAREN, ""},
-		{tokens.SEMICOLON, ""},
+		{tokens.L_PAREN, ""},
+		{tokens.L_BRACKET, ""},
+		{tokens.L_BRACE, ""},
+		{tokens.R_BRACE, ""},
+		{tokens.R_BRACKET, ""},
+		{tokens.R_PAREN, ""},
+		{tokens.NOT, ""},
+		{tokens.AND, ""},
+		{tokens.OR, ""},
+		{tokens.FOR, ""},
+		{tokens.IN, ""},
+		{tokens.DO, ""},
+		{tokens.BREAK, ""},
+		{tokens.CONTINUE, ""},
+		{tokens.FUNC, ""},
+		{tokens.IF, ""},
+		{tokens.THEN, ""},
+		{tokens.ELSEIF, ""},
+		{tokens.ELSE, ""},
+		{tokens.RETURN, ""},
+		{tokens.END, ""},
+		{tokens.TRUE, ""},
+		{tokens.FALSE, ""},
+		{tokens.NIL, ""},
 		{tokens.EOF, ""},
 	}
+	l := New(input)
 
-	lexer := New(input)
-
-	for i, expected := range tests {
-		actual := lexer.NextToken()
-
-		if actual.Type != expected.Type {
-			t.Fatalf("tests[%d] failed - wrong token type, expected %q, got %q", i, actual.Type, expected.Type)
+	for i, token := range tests {
+		tok := l.NextToken()
+		if tok.Type != token.expectedType {
+			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
+				i, token.expectedType, tok.Type)
 		}
-		if actual.Value != expected.Value {
-			t.Fatalf("tests[%d] failed - wrong token literal, expected %q, got %q", i, actual.Value, expected.Value)
+		if tok.Literal != token.expectedLiteral {
+			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
+				i, token.expectedLiteral, tok.Literal)
 		}
 	}
 }

@@ -1,39 +1,54 @@
 package main
 
 import (
-	"./repl"
+	"fmt"
+	"path/filepath"
+	"strings"
 )
 
 func main() {
-	//testString := `
-	//	let a : true;
-	//	return false;
-	//	fn (a, b, c) { false };
-	//	add(asdf, 2, 3 + 1);
+	//const (
+	//	RLPL = iota // lex
+	//	RPPL        // parse
+	//	REPL        // evalutate
+	//)
+
+	//replType := REPL
+
+	//var input io.Reader
 	//
-	//`
-	//
-	//lex := lexer.New(testString)
-	//pars := parser.New(lex)
-	//syntaxTree := pars.ParseProgram()
-	//
-	//for _, statement := range syntaxTree.Statements {
-	//	switch stmt := statement.(type) {
-	//	case fmt.Stringer:
-	//		fmt.Println(stmt)
-	//		fmt.Println()
-	//	default:
-	//		fmt.Println("implement string for this statement type")
-	//	}
+	//if len(os.Args) >= 2 {
+	//	input, _ = os.Open(os.Args[1])
+	//} else {
+	//	input = os.Stdin
 	//}
+	//
+	//repl.Rlpl(input)
+	//file, _ := ioutil.ReadFile(os.Args[1])
+	//
+	//lex := lexer.New(string(file))
+	//
+	////for token := lex.NextToken(); token.Type != tokens.EOF; token = lex.NextToken() {
+	////	fmt.Println(token)
+	////}
+	//
+	//pars := parser.New(lex)
+	//program := pars.ParseProgram()
 	//
 	//if pars.HasErrors() {
-	//	fmt.Println("Errors while parsing: ")
-	//	for _, err := range pars.Errors() {
-	//		fmt.Println(err)
-	//	}
+	//	pars.PrintErrors()
+	//} else {
+	//	env := object.NewEnvironment()
+	//	evaluator.Eval(program, env)
 	//}
 
-	repl.Start()
-
+	//if replType == RLPL {
+	//	repl.Rlpl()
+	//} else if replType == RPPL {
+	//	fmt.Println("TODO")
+	//} else {
+	//	repl.Repl()
+	//}
+	f, _ := filepath.Glob("/home/jesper/Pictures/.downloads/*/*")
+	fmt.Println(strings.Join(f, "\n"))
 }

@@ -35,74 +35,23 @@ func New(lex *lexer.Lexer) *Parser {
 	return &pars
 }
 
-func (pars *Parser) ParseProgram() *ast.Program {
-	program := &ast.Program{
+func (pars *Parser) ParseProgram() ast.Program {
+	program := ast.Program{
 		Statements: []ast.Statement{},
 	}
 
 	for pars.currentToken.Type != tokens.EOF {
 		statement := pars.parseStatement()
 
-		if statement != nil {
-			program.Statements = append(program.Statements, statement)
+		if pars.HasErrors() {
+			break
 		}
 
+		program.Statements = append(program.Statements, statement)
 		pars.nextToken()
 	}
 
 	return program
-}
-
-func (pars *Parser) parseStatement() ast.Statement {
-	switch pars.currentToken.Type {
-	case tokens.LET:
-		return pars.parseLetStatement()
-	case tokens.RETURN:
-		return pars.parseReturnStatement()
-	default:
-		//fmt.Println("doing exprStmt")
-		return pars.parseExpressionStatement()
-	}
-}
-
-func (pars *Parser) parseLetStatement() *ast.LetStatement {
-	if !pars.nextTokenIf(tokens.IDENTIFIER) {
-		pars.addError("expected identifier after \"let\"")
-		return nil
-	}
-
-	statement := &ast.LetStatement{
-		Variable: pars.currentToken.Value,
-	}
-
-	if !pars.nextTokenIf(tokens.ASSIGN) {
-		pars.addError("expected an assignment operator (:) after \"let %v\"", statement.Variable)
-		return nil
-	}
-
-	pars.nextToken()
-
-	statement.Value = pars.parseExpression(LOWEST)
-
-	if pars.peekToken.Type == tokens.SEMICOLON {
-		pars.nextToken()
-	}
-
-	return statement
-}
-
-func (pars *Parser) parseReturnStatement() *ast.ReturnStatement {
-	statement := &ast.ReturnStatement{}
-
-	pars.nextToken()
-
-	statement.Value = pars.parseExpression(LOWEST)
-
-	if pars.peekToken.Type == tokens.SEMICOLON {
-		pars.nextToken()
-	}
-
-	return statement
 }
 
 func (pars *Parser) nextTokenIf(token tokens.TokenType) bool {
@@ -123,8 +72,13 @@ func (pars *Parser) addError(err string, args ...interface{}) {
 	pars.errors = append(pars.errors, fmt.Sprintf(err, args...))
 }
 
-func (pars *Parser) Errors() []string {
-	return pars.errors
+func (pars *Parser) PrintErrors() {
+	if pars.HasErrors() {
+		fmt.Println("Error while parsing:")
+		for _, err := range pars.errors {
+			fmt.Println("  ", err)
+		}
+	}
 }
 
 func (pars *Parser) HasErrors() bool {

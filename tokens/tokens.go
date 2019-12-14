@@ -2,101 +2,171 @@ package tokens
 
 import "fmt"
 
-type TokenType string
+type TokenType int
 
 type Token struct {
-	Type  TokenType
-	Value string
+	Type    TokenType
+	Literal string
+	Pos     Pos
 }
 
-func (token Token) String() string {
-	if token.Value == "" {
-		return fmt.Sprintf("TOKEN [%s]", token.Type)
-	} else {
-		return fmt.Sprintf("TOKEN [%s] (%s)", token.Type, token.Value)
-	}
+type Pos struct {
+	Line int
+	Col  int
 }
 
 const (
-	ILLEGAL = "ILLEGAL"
-	EOF     = "EOF"
+	// special
+	ILLEGAL TokenType = iota
+	EOF
+	COMMENT
 
-	IDENTIFIER = "IDENTIFIER"
-	INT        = "INT"
-	REAL       = "REAL"
+	IDENT
+	NUMBER
+	STRING
 
-	ASSIGN   = ":"
-	PLUS     = "+"
-	MINUS    = "-"
-	MULTIPLY = "*"
-	DIVIDE   = "/"
+	ASSIGN
 
-	EQUALITY = "="
-	LESS     = "<"
-	GREATER  = ">"
+	ADD
+	SUB
+	MUL
+	DIV
 
-	COMMA     = ","
-	SEMICOLON = ";"
+	ADD_ASSIGN
+	SUB_ASSIGN
+	MUL_ASSIGN
+	DIV_ASSIGN
 
-	LEFT_PAREN    = "("
-	RIGHT_PAREN   = ")"
-	LEFT_BRACE    = "{"
-	RIGHT_BRACE   = "}"
-	LEFT_BRACKET  = "["
-	RIGHT_BRACKET = "]"
+	EQ
+	NOT_EQ
+	LESS
+	LESS_EQ
+	GREATER
+	GREATER_EQ
 
-	FUNCTION = "FUNCTION"
-	LET      = "LET"
-	IF       = "IF"
-	ELSE     = "ELSE"
-	ELSEIF   = "ELSEIF"
-	RETURN   = "RETURN"
+	COMMA
+	DOT
 
-	TRUE     = "TRUE"
-	FALSE    = "FALSE"
-	NEGATION = "NOT"
+	L_PAREN
+	L_BRACE
+	L_BRACKET
+
+	R_PAREN
+	R_BRACE
+	R_BRACKET
+
+	keywords_begin
+
+	NOT
+	AND
+	OR
+
+	FOR
+	IN
+	DO
+	BREAK
+	CONTINUE
+	FUNC
+	IF
+	THEN
+	ELSE
+	ELSEIF
+	RETURN
+	END
+
+	TRUE
+	FALSE
+	NIL
+
+	keywords_end
 )
 
-var (
-	keyWords = map[string]TokenType{
-		"let":    LET,
-		"fn":     FUNCTION,
-		"not":    NEGATION,
-		"if":     IF,
-		"else":   ELSE,
-		"elseif": ELSEIF,
-		"true":   TRUE,
-		"false":  FALSE,
-		"return": RETURN,
+var tokenNames = [...]string{
+	ILLEGAL: "illegal",
+	EOF:     "eof",
+	COMMENT: "comment",
+
+	IDENT:  "ident",
+	NUMBER: "number",
+	STRING: "string",
+
+	ASSIGN: "=",
+
+	ADD: "+",
+	SUB: "-",
+	MUL: "*",
+	DIV: "/",
+
+	ADD_ASSIGN: "+=",
+	SUB_ASSIGN: "-=",
+	MUL_ASSIGN: "*=",
+	DIV_ASSIGN: "/=",
+
+	EQ:         "=",
+	NOT_EQ:     "!=",
+	LESS:       "<",
+	LESS_EQ:    "<=",
+	GREATER:    ">",
+	GREATER_EQ: ">=",
+
+	COMMA: ",",
+	DOT:   ".",
+
+	L_PAREN:   "(",
+	L_BRACE:   "{",
+	L_BRACKET: "[",
+
+	R_PAREN:   ")",
+	R_BRACE:   "}",
+	R_BRACKET: "]",
+
+	NOT: "not",
+	AND: "and",
+	OR:  "or",
+
+	FOR:      "for",
+	IN:       "in",
+	DO:       "do",
+	BREAK:    "break",
+	CONTINUE: "continue",
+	FUNC:     "func",
+	IF:       "if",
+	THEN:     "then",
+	ELSE:     "else",
+	ELSEIF:   "elseif",
+	RETURN:   "return",
+	END:      "end",
+
+	TRUE:  "true",
+	FALSE: "false",
+	NIL:   "nil",
+}
+
+func (tt TokenType) String() string {
+	return tokenNames[tt]
+}
+
+func (t Token) String() string {
+	if t.Literal != "" {
+		return fmt.Sprintf("TOKEN(%v - %v)", tokenNames[int(t.Type)], t.Literal)
 	}
+	return fmt.Sprintf("TOKEN(%v)", tokenNames[int(t.Type)])
+}
 
-	SimpleTokens = map[byte]TokenType{
-		ASSIGN[0]:   ASSIGN,
-		PLUS[0]:     PLUS,
-		MINUS[0]:    MINUS,
-		MULTIPLY[0]: MULTIPLY,
-		DIVIDE[0]:   DIVIDE,
+var keywords map[string]TokenType
 
-		EQUALITY[0]: EQUALITY,
-		LESS[0]:     LESS,
-		GREATER[0]:  GREATER,
+func init() {
+	keywords = make(map[string]TokenType)
 
-		COMMA[0]:     COMMA,
-		SEMICOLON[0]: SEMICOLON,
-
-		LEFT_PAREN[0]:    LEFT_PAREN,
-		RIGHT_PAREN[0]:   RIGHT_PAREN,
-		LEFT_BRACE[0]:    LEFT_BRACE,
-		RIGHT_BRACE[0]:   RIGHT_BRACE,
-		LEFT_BRACKET[0]:  LEFT_BRACKET,
-		RIGHT_BRACKET[0]: RIGHT_BRACKET,
+	for i := keywords_begin + 1; i < keywords_end; i++ {
+		keywords[tokenNames[i]] = i
 	}
-)
+}
 
 func LookupIdentifier(identifier string) TokenType {
-	if token, ok := keyWords[identifier]; ok {
+	if token, ok := keywords[identifier]; ok {
 		return token
 	}
 
-	return IDENTIFIER
+	return IDENT
 }

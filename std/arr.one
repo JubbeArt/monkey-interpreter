@@ -1,0 +1,39 @@
+return {
+	map <- fn (mappingFn)
+		return fn (arr)
+			let res <- [] 
+		
+			loop (item in arr)
+				res.add(mappingFn(item))		
+			end
+			
+			res
+		end	
+	end
+	
+	filter <- fn(filterFn)
+		return fn (arr)
+			let res : []
+			
+			loop (item in arr)
+				if filterFn(item)
+					res.add(item)
+				end
+			end
+			
+			res	
+		end	
+	end
+	
+	reduce <- fn(initValue, reduceFn)
+		return fn (arr)
+			let valueRec : {v: initValue}
+			
+			loop (item in arr)
+				valueRec.v : reduceFn(valueRec.v, item)
+			end
+			
+			valueRec.v
+		end
+	end
+}

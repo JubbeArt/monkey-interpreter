@@ -1,0 +1,27 @@
+board <- fn (board)
+	get(`https://4.cdn.com/board/#{board}`)
+		-> json.parse
+		-> map(fn (thread) {a: 5} end)
+		-> fn (res) asdf(res, 123) end
+end
+
+cache <- {}
+
+getJson <- fn (url)
+	if cache.has(url)
+		return cache[url]	
+	end
+	
+	cache[url] <- get(url) -> json.parse
+	return cache[url]
+end
+
+
+
+
+
+
+
+
+
+
