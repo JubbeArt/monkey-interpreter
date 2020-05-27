@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"unicode"
+	"unicode/utf8"
 
 	"../tokens"
 )
@@ -10,27 +11,33 @@ const EOF = 0
 
 type Lexer struct {
 	input string
-	pos   int
 
 	line int
 	col  int
 
-	char rune
+	current    rune
+	currentPos int
+	lastLen    int
 }
 
 func New(input string) *Lexer {
-	lexer := Lexer{input: input, pos: -1}
+	lexer := Lexer{input: input, currentPos: 0}
 	return &lexer
 }
 
 func (lexer *Lexer) NextToken() tokens.Token {
 	lexer.readChar()
 
-	for unicode.IsSpace(lexer.char) {
+	for unicode.IsSpace(lexer.current) {
 		lexer.readChar()
 	}
 
-	switch lexer.char {
+	if lexer.current == '#' {
+		lexer.readLine()
+		return lexer.NextToken()
+	}
+
+	switch lexer.current {
 	case '=':
 		if lexer.peek() == '=' {
 			lexer.readChar()
@@ -95,14 +102,14 @@ func (lexer *Lexer) NextToken() tokens.Token {
 	case '.':
 		return lexer.token(tokens.DOT)
 	case '"':
-		text := lexer.getText()
-		return lexer.tokenLiteral(tokens.STRING, text)
+		str := lexer.getString()
+		return lexer.tokenLiteral(tokens.STRING, str)
 	case EOF:
 		return lexer.token(tokens.EOF)
 	}
 
 	// check for numbers
-	if unicode.IsDigit(lexer.char) {
+	if unicode.IsDigit(lexer.current) {
 		// TODO: RETURN ERROR
 		number := lexer.getDigits()
 
@@ -116,8 +123,7 @@ func (lexer *Lexer) NextToken() tokens.Token {
 	}
 
 	// check for keywords/identifiers
-	if unicode.IsLetter(lexer.char) {
-		// TODO: ADD ERROR
+	if isLetter(lexer.current) {
 		identifier := lexer.getIdentifier()
 		token := tokens.LookupIdentifier(identifier)
 
@@ -128,63 +134,71 @@ func (lexer *Lexer) NextToken() tokens.Token {
 		}
 	}
 
-	return lexer.tokenLiteral(tokens.ILLEGAL, string(lexer.char))
+	return lexer.tokenLiteral(tokens.ILLEGAL, string(lexer.current))
 }
 
-// TODO: utf8
 func (lexer *Lexer) readChar() {
-	lexer.pos += 1
-	lexer.col += 1
+	lexer.currentPos += lexer.lastLen
 
-	if lexer.pos >= len(lexer.input) {
-		lexer.char = EOF
-	} else {
-		lexer.char = rune(lexer.input[lexer.pos])
+	if lexer.currentPos >= len(lexer.input) {
+		lexer.current = EOF
+		return
+	}
 
-		if lexer.char == '\n' {
-			lexer.col = 0
-			lexer.line += 1
-		}
+	current, currentLen := utf8.DecodeRuneInString(lexer.input[lexer.currentPos:])
+	lexer.current = current
+	lexer.lastLen = currentLen
+
+	if lexer.current == '\n' {
+		lexer.col = 0
+		lexer.line += 1
 	}
 }
 
 func (lexer *Lexer) peek() rune {
-	if lexer.pos+1 >= len(lexer.input) {
+	if lexer.currentPos+lexer.lastLen > len(lexer.input) {
 		return EOF
 	}
 
-	return rune(lexer.input[lexer.pos+1])
+	peek, _ := utf8.DecodeRuneInString(lexer.input[lexer.currentPos+lexer.lastLen:])
+	return peek
 }
 
-func (lexer *Lexer) getText() string {
-	start := lexer.pos + 1
-	lexer.readChar()
+func (lexer *Lexer) getString() string {
+	lexer.readChar() // consume "
+	start := lexer.currentPos
 
-	for lexer.char != '"' {
+	for lexer.current != '"' {
 		lexer.readChar()
 	}
 
-	return lexer.input[start:lexer.pos]
+	return lexer.input[start:lexer.currentPos]
 }
 
 func (lexer *Lexer) getIdentifier() string {
-	start := lexer.pos
+	start := lexer.currentPos
 
-	for unicode.IsLetter(lexer.peek()) || unicode.IsDigit(lexer.peek()) || lexer.peek() == '_' {
+	for isLetter(lexer.peek()) {
 		lexer.readChar()
 	}
 
-	return lexer.input[start : lexer.pos+1]
+	return lexer.input[start : lexer.currentPos+lexer.lastLen]
 }
 
 func (lexer *Lexer) getDigits() string {
-	start := lexer.pos
+	start := lexer.currentPos
 
-	for unicode.IsDigit(lexer.peek()) {
+	for isDigit(lexer.peek()) {
 		lexer.readChar()
 	}
 
-	return lexer.input[start : lexer.pos+1]
+	return lexer.input[start : lexer.currentPos+lexer.lastLen]
+}
+
+func (lexer *Lexer) readLine() {
+	for peek := lexer.peek(); peek != '\n' && peek != EOF; peek = lexer.peek() {
+		lexer.readChar()
+	}
 }
 
 func (lexer *Lexer) token(tokenType tokens.TokenType) tokens.Token {
@@ -201,4 +215,12 @@ func (lexer *Lexer) tokenLiteral(tokenType tokens.TokenType, literal string) tok
 		Literal: literal,
 		Pos:     tokens.Pos{Line: lexer.line, Col: lexer.col},
 	}
+}
+
+func isLetter(char rune) bool {
+	return 'a' <= char && char <= 'z' || char == '_'
+}
+
+func isDigit(char rune) bool {
+	return '0' <= char && char <= '9'
 }

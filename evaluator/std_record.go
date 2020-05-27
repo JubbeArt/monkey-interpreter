@@ -12,7 +12,7 @@ var stdRecord = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("record.keys", args[0], object.RECORD_TYPE); err != nil {
+			if err := checkFirstArgType("record.keys", args[0], object.RECORD); err != nil {
 				return err
 			}
 
@@ -33,7 +33,7 @@ var stdRecord = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("record.values", args[0], object.RECORD_TYPE); err != nil {
+			if err := checkFirstArgType("record.values", args[0], object.RECORD); err != nil {
 				return err
 			}
 

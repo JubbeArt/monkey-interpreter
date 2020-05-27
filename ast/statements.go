@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 
 	"../tokens"
 )
@@ -17,8 +17,8 @@ type AssignmentStatement struct {
 }
 
 //func (s AssignmentStatement) StartPos() tokens.Pos { return s.startPos }
-func (s AssignmentStatement) String() string {
-	return fmt.Sprintf("%v = %v", s.Name, s.Value.String())
+func (s AssignmentStatement) String(indent int) string {
+	return fmt.Sprintf("%v = %v", s.Name, s.Value.String(indent))
 }
 func (s AssignmentStatement) statementNode() {}
 
@@ -33,8 +33,8 @@ type ShorthandAssignmentStatement struct {
 }
 
 //func (s AssignmentStatement) StartPos() tokens.Pos { return s.startPos }
-func (s ShorthandAssignmentStatement) String() string {
-	return fmt.Sprintf("%v %v= %v", s.Name, s.Operator, s.Value.String())
+func (s ShorthandAssignmentStatement) String(indent int) string {
+	return fmt.Sprintf("%v %v %v", s.Name, s.Operator, s.Value.String(indent))
 }
 func (s ShorthandAssignmentStatement) statementNode() {}
 
@@ -42,31 +42,21 @@ func (s ShorthandAssignmentStatement) statementNode() {}
 // ------------- IF STATEMENT ----------------
 // -------------------------------------------
 type IfStatement struct {
-	IfCondition      Expression
-	IfBlock          BlockStatement
-	ElseIfConditions []Expression
-	ElseIfBlocks     []BlockStatement
-	ElseBlock        BlockStatement
-	Token            tokens.Token
+	Conditions   []Expression
+	Consequences []BlockStatement
+	Token        tokens.Token
 }
 
 //func (e IfStatement) StartPos() tokens.Pos { return e.startPos }
 func (e IfStatement) statementNode() {}
-func (e IfStatement) String() string {
-	var out bytes.Buffer
+func (e IfStatement) String(indent int) string {
+	var stmts []string
 
-	out.WriteString(fmt.Sprintf("if %v then\n%v", e.IfCondition.String(), e.IfBlock.String()))
-
-	for i, elseIf := range e.ElseIfConditions {
-		out.WriteString(fmt.Sprintf("elseif %v then\n%v", elseIf, e.ElseIfBlocks[i]))
+	for i, cond := range e.Conditions {
+		stmts = append(stmts, fmt.Sprintf("if %v then\n%v", cond.String(indent), e.Consequences[i].String(indent+1)))
 	}
 
-	if len(e.ElseBlock.Statements) > 0 {
-		out.WriteString(fmt.Sprintf("else \n%v", e.ElseBlock.String()))
-	}
-
-	out.WriteString("end")
-	return out.String()
+	return strings.Join(stmts, "") + strings.Repeat(INDENT, indent) + "end"
 }
 
 // -------------------------------------------
@@ -79,29 +69,27 @@ type ReturnStatement struct {
 
 //func (s ReturnStatement) StartPos() tokens.Pos { return s.startPos }
 func (s ReturnStatement) statementNode() {}
-func (s ReturnStatement) String() string {
+func (s ReturnStatement) String(indent int) string {
 	if s.Value == nil {
 		return fmt.Sprintf("return")
 	} else {
-		return fmt.Sprintf("return %v", s.Value.String())
+		return fmt.Sprintf("return %v", s.Value.String(indent))
 	}
 }
 
 // -------------------------------------------
-// -------------- FOR STATEMENT --------------
+// ------------- LOOP STATEMENT --------------
 // -------------------------------------------
-type ForStatement struct {
-	ItemName string
-	List     Expression
-	Body     BlockStatement
-	Token    tokens.Token
+type LoopStatement struct {
+	Body  BlockStatement
+	Token tokens.Token
 }
 
-//func (s ForStatement) StartPos() tokens.Pos { return s.startPos }
-func (s ForStatement) String() string {
-	return fmt.Sprintf("for %v in %v do\n%vend", s.ItemName, s.List.String(), s.Body.String())
+//func (s LoopStatement) StartPos() tokens.Pos { return s.startPos }
+func (s LoopStatement) String(indent int) string {
+	return fmt.Sprintf("loop\n%v%vend", s.Body.String(indent+1), strings.Repeat(INDENT, indent))
 }
-func (s ForStatement) statementNode() {}
+func (s LoopStatement) statementNode() {}
 
 // -------------------------------------------
 // ------------ BLOCK STATEMENT --------------
@@ -113,12 +101,13 @@ type BlockStatement struct {
 
 //func (e BlockStatement) StartPos() tokens.Pos { return e.startPos }
 func (e BlockStatement) statementNode() {}
-func (e BlockStatement) String() string {
-	var out bytes.Buffer
+func (e BlockStatement) String(indent int) string {
+	var stmts []string
 
+	in := strings.Repeat(INDENT, indent)
 	for _, stmt := range e.Statements {
-		out.WriteString("  " + stmt.String() + "\n")
+		stmts = append(stmts, in+stmt.String(indent)+"\n")
 	}
 
-	return out.String()
+	return strings.Join(stmts, "")
 }

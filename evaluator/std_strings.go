@@ -14,11 +14,11 @@ var stdString = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("string.has", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("string.has", args[0], object.STRING); err != nil {
 				return err
 			}
 
-			if err := checkSecondArgType("string.has", args[1], object.STRING_TYPE); err != nil {
+			if err := checkSecondArgType("string.has", args[1], object.STRING); err != nil {
 				return err
 			}
 
@@ -31,11 +31,11 @@ var stdString = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("string.has_uncased", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("string.has_uncased", args[0], object.STRING); err != nil {
 				return err
 			}
 
-			if err := checkSecondArgType("string.has_uncased", args[1], object.STRING_TYPE); err != nil {
+			if err := checkSecondArgType("string.has_uncased", args[1], object.STRING); err != nil {
 				return err
 			}
 

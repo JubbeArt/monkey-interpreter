@@ -13,7 +13,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 	// Statements
 	case ast.Program:
-		return evalProgram(node.Statements, env)
+		return evalProgram(node.Body, env)
 	case ast.ExpressionStatement:
 		return Eval(node.Expression, env)
 	case ast.AssignmentStatement:
@@ -94,13 +94,13 @@ func evalIdentifier(identifier ast.IdentifierExpression, env *object.Environment
 }
 
 func evalIfStatement(node ast.IfStatement, env *object.Environment) object.Object {
-	condition := Eval(node.IfCondition, env)
+	condition := Eval(node.Conditions, env)
 	if isError(condition) {
 		return condition
 	}
 
 	if condition.Bool() {
-		Eval(node.IfBlock, env)
+		Eval(node.Consequences, env)
 	}
 
 	// TODO: Loop
@@ -181,7 +181,7 @@ func evalBlockStatements(statements []ast.Statement, env *object.Environment) ob
 			continue
 		}
 
-		if result.Type() == object.RETURN_VALUE_TYPE || result.Type() == object.ERROR_TYPE {
+		if result.Type() == object.RETURN || result.Type() == object.ERROR {
 			return result
 		}
 	}
@@ -194,7 +194,7 @@ func newErrorF(format string, args ...interface{}) object.Error {
 }
 
 func isError(obj object.Object) bool {
-	return obj != nil && obj.Type() == object.ERROR_TYPE
+	return obj != nil && obj.Type() == object.ERROR
 }
 
 func evalInfixExpression(operator tokens.TokenType, left object.Object, right object.Object) object.Object {
@@ -218,9 +218,9 @@ func evalInfixExpression(operator tokens.TokenType, left object.Object, right ob
 	}
 
 	switch {
-	case left.Type() == object.NUMBER_TYPE && right.Type() == object.NUMBER_TYPE:
+	case left.Type() == object.NUMBER && right.Type() == object.NUMBER:
 		return evalIntegerInfixExpression(operator, left, right)
-	case left.Type() == object.STRING_TYPE && right.Type() == object.STRING_TYPE:
+	case left.Type() == object.STRING && right.Type() == object.STRING:
 		return evalStringInfixExpression(operator, left, right)
 	case left.Type() != right.Type():
 		return newErrorF("type mismatch %v %v %v", left.Type(), operator, right.Type())
@@ -272,7 +272,7 @@ func evalPrefixExpression(operator tokens.TokenType, right object.Object) object
 	case tokens.NOT:
 		return object.Boolean(!right.Bool())
 	case tokens.SUB:
-		if right.Type() == object.NUMBER_TYPE {
+		if right.Type() == object.NUMBER {
 			return right.(object.Number).Negate()
 		}
 	}

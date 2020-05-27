@@ -1,3 +1,0 @@
-print("making request")
-http_get()
-print("done with request")

@@ -11,7 +11,7 @@ var stdMath = object.Record{
 			if err := checkArgLengthAtLeast("math.max", args, 1); err != nil {
 				return err
 			}
-			if err := checkAllArgType("math.max", args, object.NUMBER_TYPE); err != nil {
+			if err := checkAllArgType("math.max", args, object.NUMBER); err != nil {
 				return err
 			}
 
@@ -31,7 +31,7 @@ var stdMath = object.Record{
 			if err := checkArgLengthAtLeast("math.min", args, 1); err != nil {
 				return err
 			}
-			if err := checkAllArgType("math.min", args, object.NUMBER_TYPE); err != nil {
+			if err := checkAllArgType("math.min", args, object.NUMBER); err != nil {
 				return err
 			}
 

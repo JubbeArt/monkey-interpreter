@@ -12,11 +12,11 @@ var stdList = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("list.map", args[0], object.LIST_TYPE); err != nil {
+			if err := checkFirstArgType("list.map", args[0], object.LIST); err != nil {
 				return err
 			}
 
-			if err := checkSecondArgType("list.map", args[1], object.FUNCTION_TYPE); err != nil {
+			if err := checkSecondArgType("list.map", args[1], object.FUNCTION); err != nil {
 				return err
 			}
 
@@ -38,11 +38,11 @@ var stdList = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("list.map", args[0], object.LIST_TYPE); err != nil {
+			if err := checkFirstArgType("list.map", args[0], object.LIST); err != nil {
 				return err
 			}
 
-			if err := checkSecondArgType("list.map", args[1], object.FUNCTION_TYPE); err != nil {
+			if err := checkSecondArgType("list.map", args[1], object.FUNCTION); err != nil {
 				return err
 			}
 
@@ -65,11 +65,11 @@ var stdList = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("list.filter", args[0], object.LIST_TYPE); err != nil {
+			if err := checkFirstArgType("list.filter", args[0], object.LIST); err != nil {
 				return err
 			}
 
-			if err := checkSecondArgType("list.filter", args[1], object.FUNCTION_TYPE); err != nil {
+			if err := checkSecondArgType("list.filter", args[1], object.FUNCTION); err != nil {
 				return err
 			}
 
@@ -95,11 +95,11 @@ var stdList = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("list.reduce", args[0], object.LIST_TYPE); err != nil {
+			if err := checkFirstArgType("list.reduce", args[0], object.LIST); err != nil {
 				return err
 			}
 
-			if err := checkSecondArgType("list.reduce", args[1], object.FUNCTION_TYPE); err != nil {
+			if err := checkSecondArgType("list.reduce", args[1], object.FUNCTION); err != nil {
 				return err
 			}
 
@@ -122,7 +122,7 @@ var stdList = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("list.flat", args[0], object.LIST_TYPE); err != nil {
+			if err := checkFirstArgType("list.flat", args[0], object.LIST); err != nil {
 				return err
 			}
 
@@ -130,7 +130,7 @@ var stdList = object.Record{
 			flattenedList := make([]object.Object, 0, len(list))
 
 			for _, item := range list {
-				if item.Type() == object.LIST_TYPE {
+				if item.Type() == object.LIST {
 					flattenedList = append(flattenedList, item.(object.List)...)
 				} else {
 					flattenedList = append(flattenedList, item)
@@ -144,7 +144,7 @@ var stdList = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("list.has", args[0], object.LIST_TYPE); err != nil {
+			if err := checkFirstArgType("list.has", args[0], object.LIST); err != nil {
 				return err
 			}
 

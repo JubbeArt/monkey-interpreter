@@ -22,7 +22,7 @@ var stdTime = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("time.sleep", args[0], object.NUMBER_TYPE); err != nil {
+			if err := checkFirstArgType("time.sleep", args[0], object.NUMBER); err != nil {
 				return err
 			}
 

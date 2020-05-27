@@ -13,8 +13,7 @@ var stdEnv = object.Record{
 			if err := checkArgLength("env.get", args, 1); err != nil {
 				return err
 			}
-
-			if err := checkFirstArgType("env.get", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("env.get", args[0], object.STRING); err != nil {
 				return err
 			}
 

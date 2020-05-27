@@ -47,7 +47,7 @@ var stdLog = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("log.set_folder", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("log.set_folder", args[0], object.STRING); err != nil {
 				return err
 			}
 

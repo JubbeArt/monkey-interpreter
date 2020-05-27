@@ -13,10 +13,14 @@ func TestNextToken(t *testing.T) {
 		+-*/
 		+=-=*=/=
 		==!=<<=>>=
-		,
+		, .
 		([{}])
-		not and or for in do break continue func if then elseif
+		not and or loop break continue func if then elseif
 		else return end true false nil
+		# hello world + 5
+		"åäö" "öäå"
+		a.b
+		c[d]
 		`
 	tests := []struct {
 		expectedType    tokens.TokenType
@@ -43,6 +47,7 @@ func TestNextToken(t *testing.T) {
 		{tokens.GREATER, ""},
 		{tokens.GREATER_EQ, ""},
 		{tokens.COMMA, ""},
+		{tokens.DOT, ""},
 		{tokens.L_PAREN, ""},
 		{tokens.L_BRACKET, ""},
 		{tokens.L_BRACE, ""},
@@ -52,9 +57,7 @@ func TestNextToken(t *testing.T) {
 		{tokens.NOT, ""},
 		{tokens.AND, ""},
 		{tokens.OR, ""},
-		{tokens.FOR, ""},
-		{tokens.IN, ""},
-		{tokens.DO, ""},
+		{tokens.LOOP, ""},
 		{tokens.BREAK, ""},
 		{tokens.CONTINUE, ""},
 		{tokens.FUNC, ""},
@@ -67,6 +70,15 @@ func TestNextToken(t *testing.T) {
 		{tokens.TRUE, ""},
 		{tokens.FALSE, ""},
 		{tokens.NIL, ""},
+		{tokens.STRING, "åäö"},
+		{tokens.STRING, "öäå"},
+		{tokens.IDENT, "a"},
+		{tokens.DOT, ""},
+		{tokens.IDENT, "b"},
+		{tokens.IDENT, "c"},
+		{tokens.L_BRACKET, ""},
+		{tokens.IDENT, "d"},
+		{tokens.R_BRACKET, ""},
 		{tokens.EOF, ""},
 	}
 	l := New(input)

@@ -36,9 +36,7 @@ func New(lex *lexer.Lexer) *Parser {
 }
 
 func (pars *Parser) ParseProgram() ast.Program {
-	program := ast.Program{
-		Statements: []ast.Statement{},
-	}
+	program := ast.Program{}
 
 	for pars.currentToken.Type != tokens.EOF {
 		statement := pars.parseStatement()
@@ -47,7 +45,11 @@ func (pars *Parser) ParseProgram() ast.Program {
 			break
 		}
 
-		program.Statements = append(program.Statements, statement)
+		if statement == nil {
+			pars.addError("nil statement found, forgot to add error :(")
+		}
+
+		program.Body.Statements = append(program.Body.Statements, statement)
 		pars.nextToken()
 	}
 

@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"strconv"
-
 	"../ast"
 	"../tokens"
 )
@@ -10,24 +8,29 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	EQUALS      // =
-	LESSGREATER // > or <
-	SUM         // +
-	PRODUCT     // *
-	PREFIX      // -X or not X
-	CALL        // myFunction(X)
+	OR      // or
+	AND     // and
+	EQUALS  // ==
+	SUM     // +
+	PRODUCT // *
+	PREFIX  // -X or not X
+	CALL    // myFunction(X)
 )
 
 var precedences = map[tokens.TokenType]int{
-	tokens.EQ:      EQUALS,
-	tokens.NOT_EQ:  EQUALS,
-	tokens.LESS:    LESSGREATER,
-	tokens.GREATER: LESSGREATER,
-	tokens.ADD:     SUM,
-	tokens.SUB:     SUM,
-	tokens.MUL:     PRODUCT,
-	tokens.DIV:     PRODUCT,
-	tokens.L_PAREN: CALL,
+	tokens.OR:         OR,
+	tokens.AND:        AND,
+	tokens.EQ:         EQUALS,
+	tokens.NOT_EQ:     EQUALS,
+	tokens.LESS_EQ:    EQUALS,
+	tokens.GREATER_EQ: EQUALS,
+	tokens.LESS:       EQUALS,
+	tokens.GREATER:    EQUALS,
+	tokens.ADD:        SUM,
+	tokens.SUB:        SUM,
+	tokens.MUL:        PRODUCT,
+	tokens.DIV:        PRODUCT,
+	tokens.L_PAREN:    CALL,
 }
 
 type prefixParseFunc func() ast.Expression
@@ -51,9 +54,15 @@ func (pars *Parser) installParseFuncs() {
 	pars.infixParseFuncs[tokens.MUL] = pars.infixExpression
 	pars.infixParseFuncs[tokens.DIV] = pars.infixExpression
 	pars.infixParseFuncs[tokens.EQ] = pars.infixExpression
-	pars.infixParseFuncs[tokens.GREATER] = pars.infixExpression
+	pars.infixParseFuncs[tokens.NOT_EQ] = pars.infixExpression
 	pars.infixParseFuncs[tokens.LESS] = pars.infixExpression
+	pars.infixParseFuncs[tokens.LESS_EQ] = pars.infixExpression
+	pars.infixParseFuncs[tokens.GREATER] = pars.infixExpression
+	pars.infixParseFuncs[tokens.GREATER_EQ] = pars.infixExpression
+	pars.infixParseFuncs[tokens.AND] = pars.infixExpression
+	pars.infixParseFuncs[tokens.OR] = pars.infixExpression
 	pars.infixParseFuncs[tokens.L_PAREN] = pars.callExpression
+
 	//pars.infixParseFuncs[tokens.DOT] = pars.dotExpression
 }
 
@@ -80,155 +89,6 @@ func (pars *Parser) parseExpression(precedence int) ast.Expression {
 
 	return leftExpression
 }
-
-func (pars *Parser) identifier() ast.Expression {
-	return ast.IdentifierExpression{
-		Name:  pars.currentToken.Literal,
-		Token: pars.currentToken,
-	}
-}
-
-func (pars *Parser) number() ast.Expression {
-	value, err := strconv.ParseFloat(pars.currentToken.Literal, 64)
-
-	if err != nil {
-		pars.addError("could not parse %q as an number", pars.currentToken.Literal)
-		return nil
-	}
-
-	return ast.NumberExpression{
-		Value: value,
-		Token: pars.currentToken,
-	}
-}
-
-func (pars *Parser) boolean() ast.Expression {
-	return ast.BooleanExpression{
-		Value: pars.currentToken.Type == tokens.TRUE,
-		Token: pars.currentToken,
-	}
-}
-
-func (pars *Parser) text() ast.Expression {
-	return ast.TextExpression{
-		Value: pars.currentToken.Literal,
-		Token: pars.currentToken,
-	}
-}
-
-func (pars *Parser) functionExpression() ast.Expression {
-	expression := ast.FunctionExpression{}
-
-	if !pars.nextTokenIf(tokens.L_PAREN) {
-		pars.addError("expected \"(\" after function parameters")
-		return nil
-	}
-
-	expression.Parameters = pars.functionParameters()
-	pars.nextToken() // )
-	expression.Body = pars.blockStatements()
-
-	if pars.currentToken.Type != tokens.END {
-		pars.addError("expected \"end\" at the end of function")
-	}
-
-	return expression
-}
-
-func (pars *Parser) listExpression() ast.Expression {
-	expression := ast.ListExpression{
-		Token:  pars.currentToken,
-		Values: pars.listArguments(),
-	}
-
-	return expression
-}
-
-func (pars *Parser) listArguments() []ast.Expression {
-	args := []ast.Expression{}
-
-	if pars.nextTokenIf(tokens.R_BRACKET) {
-		return args
-	}
-
-	pars.nextToken()
-	args = append(args, pars.parseExpression(LOWEST))
-
-	for pars.peekToken.Type == tokens.COMMA {
-		pars.nextToken()
-		pars.nextToken()
-		args = append(args, pars.parseExpression(LOWEST))
-	}
-
-	if !pars.nextTokenIf(tokens.R_BRACKET) {
-		pars.addError("expected \"]\" at the end of list")
-		return nil
-	}
-
-	return args
-}
-
-func (pars *Parser) functionParameters() []string {
-	parameters := []string{}
-
-	if pars.peekToken.Type == tokens.R_PAREN {
-		pars.nextToken()
-		return parameters
-	}
-
-	pars.nextToken()
-
-	parameters = append(parameters, pars.currentToken.Literal)
-
-	for pars.peekToken.Type == tokens.COMMA {
-		pars.nextToken() // ,
-		pars.nextToken() // parameter
-		parameters = append(parameters, pars.currentToken.Literal)
-	}
-
-	if !pars.nextTokenIf(tokens.R_PAREN) {
-		pars.addError("expected \")\" after function parameters")
-		return nil
-	}
-
-	return parameters
-}
-
-func (pars *Parser) callExpression(function ast.Expression) ast.Expression {
-	expr := ast.CallExpression{
-		Function:  function,
-		Token:     pars.currentToken,
-		Arguments: pars.callArguments(),
-	}
-
-	return expr
-}
-
-func (pars *Parser) callArguments() []ast.Expression {
-	args := []ast.Expression{}
-
-	if pars.nextTokenIf(tokens.R_PAREN) {
-		return args
-	}
-
-	pars.nextToken()
-	args = append(args, pars.parseExpression(LOWEST))
-
-	for pars.peekToken.Type == tokens.COMMA {
-		pars.nextToken()
-		pars.nextToken()
-		args = append(args, pars.parseExpression(LOWEST))
-	}
-
-	if !pars.nextTokenIf(tokens.R_PAREN) {
-		pars.addError("expected \")\" at the end of function call")
-		return nil
-	}
-
-	return args
-}
-
-//func (pars *Parser)
 
 func (pars *Parser) groupedExpression() ast.Expression {
 	pars.nextToken() // (

@@ -61,9 +61,7 @@ const (
 	AND
 	OR
 
-	FOR
-	IN
-	DO
+	LOOP
 	BREAK
 	CONTINUE
 	FUNC
@@ -102,7 +100,7 @@ var tokenNames = [...]string{
 	MUL_ASSIGN: "*=",
 	DIV_ASSIGN: "/=",
 
-	EQ:         "=",
+	EQ:         "==",
 	NOT_EQ:     "!=",
 	LESS:       "<",
 	LESS_EQ:    "<=",
@@ -124,9 +122,7 @@ var tokenNames = [...]string{
 	AND: "and",
 	OR:  "or",
 
-	FOR:      "for",
-	IN:       "in",
-	DO:       "do",
+	LOOP:     "loop",
 	BREAK:    "break",
 	CONTINUE: "continue",
 	FUNC:     "func",

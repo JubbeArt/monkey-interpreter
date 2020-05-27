@@ -11,7 +11,10 @@ var stdJson = object.Record{
 			return object.Nil{}
 		}),
 		"string": object.BuiltinFunction(func(args ...object.Object) object.Object {
-			return object.Nil{}
+			if err := checkArgLength("json.string", args, 1); err != nil {
+				return err
+			}
+			return object.String(args[0].Json(0))
 		}),
 	},
 }

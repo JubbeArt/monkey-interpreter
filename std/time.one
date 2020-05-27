@@ -1,5 +1,0 @@
-import `host`
-
-return {
-	now: host.time_now,	
-}

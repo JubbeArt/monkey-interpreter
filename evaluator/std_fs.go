@@ -23,7 +23,7 @@ var stdFs = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("fs.mkdir", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("fs.mkdir", args[0], object.STRING); err != nil {
 				return err
 			}
 
@@ -41,7 +41,7 @@ var stdFs = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("fs.exists", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("fs.exists", args[0], object.STRING); err != nil {
 				return err
 			}
 
@@ -61,7 +61,7 @@ var stdFs = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("fs.files", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("fs.files", args[0], object.STRING); err != nil {
 				return err
 			}
 
@@ -87,7 +87,7 @@ var stdFs = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("fs.folders", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("fs.folders", args[0], object.STRING); err != nil {
 				return err
 			}
 
@@ -113,7 +113,7 @@ var stdFs = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("fs.glob", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("fs.glob", args[0], object.STRING); err != nil {
 				return err
 			}
 
@@ -163,7 +163,7 @@ var stdFs = object.Record{
 				return err
 			}
 
-			if err := checkFirstArgType("fs.read", args[0], object.STRING_TYPE); err != nil {
+			if err := checkFirstArgType("fs.read", args[0], object.STRING); err != nil {
 				return err
 			}
 

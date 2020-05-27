@@ -1,9 +1,7 @@
 package ast
 
 import (
-	"bytes"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"../tokens"
@@ -12,66 +10,16 @@ import (
 // -------------------------------------------
 // --------- EXPRESSION STATEMENT ------------
 // -------------------------------------------
-type ExpressionStatement struct {
-	Expression Expression
-	Token      tokens.Token
-}
-
-//func (s ExpressionStatement) Token() tokens.Pos { return s.startPos }
-func (s ExpressionStatement) statementNode() {}
-func (s ExpressionStatement) String() string {
-	return s.Expression.String()
-}
-
-// -------------------------------------------
-// --------- IDENTIFIER EXPRESSION -----------
-// -------------------------------------------
-type IdentifierExpression struct {
-	Name  string
-	Token tokens.Token
-}
-
-//func (e IdentifierExpression) StartPos() tokens.Pos { return e.startPos }
-func (e IdentifierExpression) expressionNode() {}
-func (e IdentifierExpression) String() string  { return e.Name }
-
-// -------------------------------------------
-// ----------- NUMBER EXPRESSION -------------
-// -------------------------------------------
-type NumberExpression struct {
-	Value float64
-	Token tokens.Token
-}
-
-//func (e NumberExpression) StartPos() tokens.Pos { return e.startPos }
-func (e NumberExpression) expressionNode() {}
-func (e NumberExpression) String() string {
-	return strconv.FormatFloat(e.Value, 'f', -1, 64)
-}
-
-// -------------------------------------------
-// ---------- BOOLEAN EXPRESSION -------------
-// -------------------------------------------
-type BooleanExpression struct {
-	Value bool
-	Token tokens.Token
-}
-
-//func (e BooleanExpression) StartPos() tokens.Pos { return e.startPos }
-func (e BooleanExpression) expressionNode() {}
-func (e BooleanExpression) String() string  { return strconv.FormatBool(e.Value) }
-
-// -------------------------------------------
-// ------------ TEXT EXPRESSION --------------
-// -------------------------------------------
-type TextExpression struct {
-	Value string
-	Token tokens.Token
-}
-
-//func (e TextExpression) StartPos() tokens.Pos { return e.startPos }
-func (e TextExpression) expressionNode() {}
-func (e TextExpression) String() string  { return fmt.Sprintf("%q", e.Value) }
+//type ExpressionStatement struct {
+//	Expression Expression
+//	Token      tokens.Token
+//}
+//
+////func (s ExpressionStatement) Token() tokens.Pos { return s.startPos }
+//func (s ExpressionStatement) statementNode() {}
+//func (s ExpressionStatement) String() string {
+//	return s.Expression.String()
+//}
 
 // -------------------------------------------
 // ----------- RECORD EXPRESSION -------------
@@ -84,16 +32,15 @@ type RecordExpression struct {
 
 //func (e RecordExpression) StartPos() tokens.Pos { return e.startPos }
 func (e RecordExpression) expressionNode() {}
-func (e RecordExpression) String() string {
-	var out bytes.Buffer
-	out.WriteString("{\n")
+func (e RecordExpression) String(indent int) string {
+	var pairs []string
+	in := strings.Repeat(INDENT, indent)
 
 	for i, key := range e.Keys {
-		out.WriteString(fmt.Sprintf("  %v = %v\n", key, e.Values[i].String()))
+		pairs = append(pairs, fmt.Sprintf("%v%v = %v", in, key, e.Values[i].String(indent+1)))
 	}
 
-	out.WriteString("}")
-	return out.String()
+	return fmt.Sprintf("{\n%v\n%v}", strings.Join(pairs, ",\n"), in)
 }
 
 // -------------------------------------------
@@ -107,8 +54,18 @@ type FunctionExpression struct {
 
 //func (e FunctionExpression) StartPos() tokens.Pos { return e.startPos }
 func (e FunctionExpression) expressionNode() {}
-func (e FunctionExpression) String() string {
-	return fmt.Sprintf("func (%v)\n%vend", strings.Join(e.Parameters, ", "), e.Body.String())
+func (e FunctionExpression) String(indent int) string {
+	var stmts []string
+	in := strings.Repeat(INDENT, indent+1)
+
+	for _, stmt := range e.Body.Statements {
+		stmts = append(stmts, in+stmt.String(indent+1))
+	}
+
+	return fmt.Sprintf("func (%v)\n%v\n%vend",
+		strings.Join(e.Parameters, ", "),
+		strings.Join(stmts, "\n"),
+		strings.Repeat(INDENT, indent))
 }
 
 // -------------------------------------------
@@ -121,20 +78,19 @@ type ListExpression struct {
 
 //func (e ListExpression) StartPos() tokens.Pos { return e.startPos }
 func (e ListExpression) expressionNode() {}
-func (e ListExpression) String() string {
+func (e ListExpression) String(indent int) string {
 	if len(e.Values) == 0 {
 		return "[]"
 	}
 
-	var out bytes.Buffer
-	out.WriteString("[\n")
+	var values []string
+	in := strings.Repeat(INDENT, indent+1)
 
 	for _, value := range e.Values {
-		out.WriteString(fmt.Sprintf("  %v,\n", value.String()))
+		values = append(values, in+value.String(indent+1))
 	}
 
-	out.WriteString("]")
-	return out.String()
+	return fmt.Sprintf("[\n%v\n%v]", strings.Join(values, ",\n"), strings.Repeat(INDENT, indent))
 }
 
 // -------------------------------------------
@@ -148,14 +104,15 @@ type CallExpression struct {
 
 //func (e CallExpression) StartPos() tokens.Pos { return e.startPos }
 func (e CallExpression) expressionNode() {}
-func (e CallExpression) String() string {
-	args := []string{}
+func (e CallExpression) statementNode()  {}
+func (e CallExpression) String(indent int) string {
+	var args []string
 
 	for _, arg := range e.Arguments {
-		args = append(args, arg.String())
+		args = append(args, arg.String(indent))
 	}
 
-	return fmt.Sprintf("%v(%v)", e.Function.String(), strings.Join(args, ", "))
+	return fmt.Sprintf("%v(%v)", e.Function.String(indent), strings.Join(args, ", "))
 }
 
 // -------------------------------------------
@@ -169,14 +126,12 @@ type PrefixExpression struct {
 
 //func (e PrefixExpression) StartPos() tokens.Pos { return e.startPos }
 func (e PrefixExpression) expressionNode() {}
-func (e PrefixExpression) String() string {
+func (e PrefixExpression) String(indent int) string {
 	if e.Operator == tokens.SUB {
-		return fmt.Sprintf("-" + e.RightSide.String())
-	} else if e.Operator == tokens.NOT {
-		return fmt.Sprintf("not " + e.RightSide.String())
-	} else {
-		return fmt.Sprintf("unknown prefix " + e.RightSide.String())
+		return "-" + e.RightSide.String(indent)
 	}
+
+	return fmt.Sprintf("%v %v", e.Operator, e.RightSide.String(indent))
 }
 
 // -------------------------------------------
@@ -191,6 +146,6 @@ type InfixExpression struct {
 
 //func (e InfixExpression) StartPos() tokens.Pos { return e.startPos }
 func (e InfixExpression) expressionNode() {}
-func (e InfixExpression) String() string {
-	return fmt.Sprintf("(%v %v %v)", e.LeftSide.String(), e.Operator, e.RightSide.String())
+func (e InfixExpression) String(indent int) string {
+	return fmt.Sprintf("(%v %v %v)", e.LeftSide.String(indent), e.Operator, e.RightSide.String(indent))
 }

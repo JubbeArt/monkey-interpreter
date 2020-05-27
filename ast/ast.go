@@ -1,11 +1,7 @@
 package ast
 
-import (
-	"bytes"
-)
-
 type Node interface {
-	String() string
+	String(indent int) string
 	//StartPos() tokens.Pos
 }
 
@@ -19,23 +15,15 @@ type Expression interface {
 	expressionNode()
 }
 
+const INDENT = "\t"
+
 // -------------------------------------------
 // ---------------- PROGRAM ------------------
 // -------------------------------------------
 type Program struct {
-	Statements []Statement
+	Body BlockStatement
 }
 
-func (program Program) String() string {
-	var out bytes.Buffer
-
-	for i, stmt := range program.Statements {
-		if i == len(program.Statements)-1 {
-			out.WriteString(stmt.String() + "\n")
-		} else {
-			out.WriteString(stmt.String() + "\n\n")
-		}
-	}
-
-	return out.String()
+func (p Program) String(indent int) string {
+	return p.Body.String(indent)
 }

@@ -22,6 +22,7 @@ var (
 		"conv":   stdConv,
 		"env":    stdEnv,
 		"fs":     stdFs,
+		"http":   stdHttp,
 		"json":   stdJson,
 		"list":   stdList,
 		"log":    stdLog,

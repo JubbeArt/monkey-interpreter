@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
+
+	"./lexer"
+	"./parser"
 )
 
 func main() {
@@ -23,24 +24,25 @@ func main() {
 	//	input = os.Stdin
 	//}
 	//
-	//repl.Rlpl(input)
 	//file, _ := ioutil.ReadFile(os.Args[1])
 	//
-	//lex := lexer.New(string(file))
+	//repl.Rlpl(os.Stdin)
+	lex := lexer.New(`
+	`)
 	//
-	////for token := lex.NextToken(); token.Type != tokens.EOF; token = lex.NextToken() {
-	////	fmt.Println(token)
-	////}
-	//
-	//pars := parser.New(lex)
-	//program := pars.ParseProgram()
-	//
-	//if pars.HasErrors() {
-	//	pars.PrintErrors()
-	//} else {
-	//	env := object.NewEnvironment()
-	//	evaluator.Eval(program, env)
+	//for token := lex.NextToken(); token.Type != tokens.EOF; token = lex.NextToken() {
+	//	fmt.Println(token)
 	//}
+	//
+	pars := parser.New(lex)
+	program := pars.ParseProgram()
+	//_ = program
+	//
+	if pars.HasErrors() {
+		pars.PrintErrors()
+	} else {
+		fmt.Println(program.String(0))
+	}
 
 	//if replType == RLPL {
 	//	repl.Rlpl()
@@ -49,6 +51,6 @@ func main() {
 	//} else {
 	//	repl.Repl()
 	//}
-	f, _ := filepath.Glob("/home/jesper/Pictures/.downloads/*/*")
-	fmt.Println(strings.Join(f, "\n"))
+	//f, _ := filepath.Glob("/home/jesper/Pictures/.downloads/*/*")
+	//fmt.Println(strings.Join(f, "\n"))
 }
